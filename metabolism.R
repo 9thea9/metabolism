@@ -11,6 +11,7 @@ library(tidyverse)
 library(ggplot2)
 library(patchwork)
 library(vegan)
+library(ggfortify)
 
 #import the dataset 
 metabolism<-read_excel("Data_Metabolism.xlsx", sheet="data")%>%
@@ -66,7 +67,15 @@ mod3<-lm(log_DOC~Agr+light+log_SRP, data=met_sub)#with + every single factor by 
 anova(mod3)
 
 #pca
+#maybe a nice resource to understand pca better
+#https://rstatisticsblog.com/data-science-in-action/data-preprocessing/complete-guide-to-principal-component-analysis-in-r/
+pca.met<-prcomp(met_sub)
+biplot(pca.met)#nr 1-33 are the sites. 
+
+
+#other method to do a pca (like we did in the course)
 dmat = vegdist(met_sub, method = "bray") # compute a dissimilarity matrix
 pcoa = cmdscale(dmat, k = 2, eig=TRUE) # always computes all axes, but will only report scores of k=2
 plot(pcoa$points) # score plot
+
 
