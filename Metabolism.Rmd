@@ -1,0 +1,127 @@
+---
+title: "Dissoveld organic matter along a land-use gradient"
+author: "Thea Schwingshackl"
+date: "26.2.2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+```
+
+## VU Datenanalyse
+
+**Introduction**
+This limnological study is based on data from 33 2nd to 4th order streams in Upper and 
+Lower Austria. We investigated links among (i) catchment land use (as derived from a geographical 
+analysis of satellite data), (ii) quantity and composition of dissolved organic matter (DOM) in transport in 
+the water column, and (iii) stream ecosystem metabolism, i.e. gross primary production (GPP) and 
+ecosystem respiration (ER) estimated from 24 hour profiles of dissolved oxygen concentration.
+
+
+
+```{r, include=FALSE}
+#set the right working directory on your PC
+setwd("C:/Users/Thea/Desktop/vu_datenanalyse/Group project")
+
+#load the needed packages
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+
+#import the dataset 
+metabolism<-read_excel("Data_Metabolism.xlsx", sheet="data")
+```
+
+**Some questions to test**
+Does land use affect light? And does further light affect the Gross primary production? 
+What are the influences of Land use on DOC, DOM and Nutrients? 
+How is ER influenced by those? 
+![hypothesis to test](Picture1.png)
+**Normal distribution**
+For most of the statistical analysis it is important, that the data is normal distributed. There for this is checked here. If not, log- transformation. 
+
+```{r}
+ggplot(metabolism)+
+  geom_histogram(aes(x=log(DIN)), bins=6)#bit right skewed
+ggplot(metabolism)+
+  geom_histogram(aes(x=log(DOC)), bins=6)#almost perfect normal distribution 
+#change the variables 
+metabolism<-mutate(metabolism, logDIN=log(DIN))
+metabolism<-mutate(metabolism, logDOC=log(DOC))
+```
+
+**Relationships?**
+As a first step, the dataset was explored to find eventual correlations between different variables. Different subsets of the original Dataset are analysed separatly, diveded by landuse and metabolism. Plots give some first impressions and help so see correlation. 
+
+```{r, }
+#subset the dataset for just landuse
+metLU<-select(metabolism, c(2,3,4,5,6,7,13, 14))
+plot(metLU)
+metGGP<-select(metabolism, c(9,10,11,13,14))
+plot(metGGP)
+methydro<-select(metabolism, c(13,14, 28,29,30,31,32,33))
+```
+
+**Multivariate analysis**
+There are many factors to be considered here, therefore we use multivariate analysis. (See Worksheet 5_Solved) 
+
+```{r}
+library(vegan)
+dmat = vegdist(metLU, method = "bray") # compute a dissimilarity matrix
+clu_1<-hclust(dmat, method = "single") # one of many possible solutions, play with setting for method, check help(hclust)
+clu_2<-hclust(dmat, method = "ward.D")
+# then compare effect of agglomeration method on dendrogram
+plot(clu_2, hang = -1, ylab = "BC")
+
+# which agglomeration method (and thus dendrogram) is best?
+cophenetic(clu_2) # linkage distances in dendrogram
+
+plot(dmat,cophenetic(clu_2))
+cor(dmat,cophenetic(clu_2),method="spearman")
+
+# more plotting and cutting options with dendrogram()
+met_den<-as.dendrogram(clu_2)
+heatmap(as.matrix(dmat),Rowv=met_den,symm=TRUE)
+
+pcoa = cmdscale(dmat, k = 2, eig=TRUE) # always computes all axes, but will only report scores of k=2
+pcoa$eig # to assess importance of axes
+
+# note some negative eigenvalues (variances!) for less important axes caused by squeezing the semimetric BC into a Euclidean space
+
+plot(pcoa$points) # score plot
+
+# use isolate and temperature information to color and set point characters
+
+pch.temperature <- as.integer(as.character(metLU$Agr))
+pch.temperature[pch.temperature==6]<-21
+pch.temperature[pch.temperature==28]<-23
+
+library(RColorBrewer)
+cols = brewer.pal(8, "Set2")
+col.isolate = as.character(metLU$Agr)
+
+plot(pcoa$points,pch=pch.temperature,bg=col.isolate) # score plot
+``` 
+**MODELING**
+No idea what exactly we need to do, but here are some ideas. 
+
+```{r}
+
+mod1<-lm(DIN~., data=metLU)
+plot(mod1)
+anova(mod1)
+
+mod2<-lm(DOC~., data=metLU)
+plot(mod2)
+anova(mod2)
+
+mod3<-lm(DIN~., data=metGGP)
+plot(mod3)
+anova(mod3)
+
+mod4<-lm(DOC~., data=methydro)
+plot(mod4)
+plot(mod4)
+```
+
