@@ -53,7 +53,7 @@ shapiro.test(metabolism$DIN)#p<0.05
 met_sub<-select(metabolism, c(Agr, log_light, log_ER, log_SRP, log_DOC, DIN))
 plot(met_sub)
 
-#building a linear model
+#trying to built a linear model
 mod1<-lm(log_ER~Agr, data=met_sub)
 summary(mod1)
 anova(mod1)
@@ -61,5 +61,7 @@ anova(mod1)
 mod2<-lm(log_ER~Agr+log_light+log_SRP+DIN, data=met_sub)
 anova(mod2)
 
-mod3<-lm(log_DOC~Agr+light+log_SRP, data=met_sub)
+mod3<-lm(log_DOC~Agr+light+log_SRP, data=met_sub)#with + every single factor by itselt, with * also the interactions 
 anova(mod3)
+
+#pca
