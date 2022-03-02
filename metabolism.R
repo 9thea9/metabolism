@@ -10,6 +10,7 @@ library(readxl)
 library(tidyverse)
 library(ggplot2)
 library(patchwork)
+library(vegan)
 
 #import the dataset 
 metabolism<-read_excel("Data_Metabolism.xlsx", sheet="data")%>%
@@ -53,7 +54,7 @@ shapiro.test(metabolism$DIN)#p<0.05
 met_sub<-select(metabolism, c(Agr, log_light, log_ER, log_SRP, log_DOC, DIN))
 plot(met_sub)
 
-#trying to built a linear model
+#trying to build a linear model
 mod1<-lm(log_ER~Agr, data=met_sub)
 summary(mod1)
 anova(mod1)
@@ -65,3 +66,7 @@ mod3<-lm(log_DOC~Agr+light+log_SRP, data=met_sub)#with + every single factor by 
 anova(mod3)
 
 #pca
+dmat = vegdist(met_sub, method = "bray") # compute a dissimilarity matrix
+pcoa = cmdscale(dmat, k = 2, eig=TRUE) # always computes all axes, but will only report scores of k=2
+plot(pcoa$points) # score plot
+
