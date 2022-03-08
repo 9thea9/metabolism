@@ -12,6 +12,7 @@ library(ggplot2)
 library(patchwork)
 library(vegan)
 library(ggfortify)
+library(car)
 
 #import the dataset 
 metabolism<-read_excel("Data_Metabolism.xlsx", sheet="data")%>%
@@ -50,10 +51,12 @@ shapiro.test(metabolism$log_SRP)#p<0.5
 shapiro.test(metabolism$log_DOC)#p<1
 shapiro.test(metabolism$DIN)#p<0.05
 
+#check for variance homogeneity? Bartlett test? 
+boxplot(scale(met_sub[,]))
 
 #subset &plot the dataset 
 met_sub<-select(metabolism, c(Agr, log_light, log_ER, log_SRP, log_DOC, DIN))
-plot(met_sub)
+plot(met_sub) #no relationships visible here 
 
 #trying to build a linear model
 mod1<-lm(log_ER~Agr, data=met_sub)
@@ -65,6 +68,15 @@ anova(mod2)
 
 mod3<-lm(log_DOC~Agr+light+log_SRP, data=met_sub)#with + every single factor by itselt, with * also the interactions 
 anova(mod3)
+
+mod4<-lm(Agr~log_light, data=met_sub)
+anova(mod4)
+#nothing significant here... 
+
+modfull<-lm(Agr~., data=met_sub)
+anova(modfull)#phosphorus is significant
+vif(modfull)#variance inflation factors 
+#very low vif- good?!
 
 #pca
 #maybe a nice resource to understand pca better
@@ -78,4 +90,6 @@ dmat = vegdist(met_sub, method = "bray") # compute a dissimilarity matrix
 pcoa = cmdscale(dmat, k = 2, eig=TRUE) # always computes all axes, but will only report scores of k=2
 plot(pcoa$points) # score plot
 
+#pairwise t-test
+pairwise.t.test(met_sub$Agr, met_sub$log_light,method="bonferroni",pool.sd=TRUE)
 
