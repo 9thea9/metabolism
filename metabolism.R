@@ -1,5 +1,5 @@
 ##group projects
-##djabarov, schwingshackl, weninger
+##djabarow, schwingshackl, weninger
 ##code by TS
 
 #set the right working directory on your PC
